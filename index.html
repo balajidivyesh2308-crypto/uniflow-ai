@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniFlow AI - Intelligent Priority Scheduler</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d30;
+      --card-border: #23304d;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --critical: #ef4444;
+      --high: #f97316;
+      --medium: #eab308;
+      --low: #22c55e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a855f7);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent; /* Fallback for browsers supporting standard background-clip */
+      margin-bottom: 0.5rem;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Input Card */
+    .input-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      resize: vertical;
+      font-family: inherit;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-card .val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .stat-card .lbl {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    /* Task List */
+    .task-list-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .formula-tag {
+      font-size: 0.75rem;
+      font-weight: normal;
+      color: var(--text-muted);
+      background: #0d1322;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+    }
+
+    .task-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .task-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Rank & Badges */
+    .task-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .task-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .priority-rank {
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+    }
+    .priority-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+    .badge-critical { background: rgba(239, 68, 68, 0.2); color: var(--critical); border: 1px solid var(--critical); }
+    .badge-high { background: rgba(249, 115, 22, 0.2); color: var(--high); border: 1px solid var(--high); }
+    .badge-medium { background: rgba(234, 179, 8, 0.2); color: var(--medium); border: 1px solid var(--medium); }
+    .badge-low { background: rgba(34, 197, 94, 0.2); color: var(--low); border: 1px solid var(--low); }
+
+    .score-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .score-value {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+    .score-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .task-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    /* Metadata Chips */
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .meta-chip {
+      background: #0d1322;
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Subtasks Checklist */
+    .subtasks-section {
+      background: #0d1322;
+      border-radius: 8px;
+      padding: 0.85rem;
+      border: 1px solid var(--card-border);
+      margin-top: 0.75rem;
+    }
+    .subtasks-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.35rem;
+    }
+    .subtask-item input {
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .subtask-item.completed span {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="header">
+      <h1>🚀 UniFlow AI</h1>
+      <p>Algorithmic Priority Scheduling Powered by Gemini 3.5 Flash-Lite</p>
+    </div>
+
+    <!-- Input Box -->
+    <div class="input-card">
+      <textarea id="syllabusInput" placeholder="Paste assignments, exams, or syllabus excerpts here... (e.g. 'CS101 Problem Set 1 due in 5 days, weight 15%, difficulty 4. Midterm exam in 14 days, weight 30%, difficulty 8...')"></textarea>
+      <div class="btn-row" style="display: flex; gap: 10px;">
+         <button id="exportCalBtn" onclick="exportToICS()" style="background: #10b981; display: none;">📅 Export to Calendar (.ics)</button>
+         <button id="generateBtn" onclick="handleGenerate()">Calculate Priority Schedule</button>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="stats-bar" id="statsBar" style="display: none;">
+      <div class="stat-card">
+        <div class="val" id="totalTasksCount">0</div>
+        <div class="lbl">Total Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="urgentTasksCount" style="color: var(--critical);">0</div>
+        <div class="lbl">Urgent / High Priority</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="topPriorityTask">-</div>
+        <div class="lbl">Top Priority Focus</div>
+      </div>
+    </div>
+
+    <!-- Task List Container -->
+    <div class="task-list-title">
+      <span>Priority Ordered Schedule</span>
+      <span class="formula-tag">Formula: Priority = (Weight × Difficulty) ÷ Days Left</span>
+    </div>
+
+    <div id="taskList">
+      <div class="empty-state">
+        <p>No tasks loaded yet. Paste your course details above and hit calculate!</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🧮 Priority Scoring Algorithm
+    function calculatePriorityScore(task) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const due = new Date(task.dueDate);
+      due.setHours(0, 0, 0, 0);
+
+      const diffTime = due - today;
+      const daysLeft = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+      const weight = Number(task.weight) || 10;
+      const difficulty = Number(task.difficultyOverride) || 5;
+
+      // 🧠 UniFlow Priority Formula:
+      // Combines academic weight and cognitive effort against time pressure
+      const rawScore = ((weight * 1.5) + (difficulty * 6)) / Math.max(0.8, Math.sqrt(daysLeft));
+      const normalizedScore = Math.min(100, Math.round(rawScore));
+
+      let badgeClass = 'badge-low';
+      let badgeLabel = 'Low Priority';
+
+      if (normalizedScore >= 75 || daysLeft <= 3) {
+        badgeClass = 'badge-critical';
+        badgeLabel = 'Critical';
+      } else if (normalizedScore >= 50 || daysLeft <= 7) {
+        badgeClass = 'badge-high';
+        badgeLabel = 'High Priority';
+      } else if (normalizedScore >= 30) {
+        badgeClass = 'badge-medium';
+        badgeLabel = 'Medium Priority';
+      }
+
+      return {
+        priorityScore: normalizedScore,
+        daysLeft: daysLeft,
+        badgeClass: badgeClass,
+        badgeLabel: badgeLabel
+      };
+    }
+
+    // 🚀 Handle AI Generation
+    async function handleGenerate() {
+      const btn = document.getElementById('generateBtn');
+      const text = document.getElementById('syllabusInput').value;
+
+      if (!text.trim()) {
+        alert('Please paste some course or assignment details first!');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Calculating Optimal Schedule... 🧠';
+
+      try {
+        const response = await fetch('http://localhost:5000/api/generate-schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rawText: text })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `Server responded with ${response.status}`);
+        }
+
+        const data = await response.json();
+        const rawTasks = data.parsedTasks || [];
+
+        // 1. Calculate Priority for each task
+        const scoredTasks = rawTasks.map(t => {
+          const metrics = calculatePriorityScore(t);
+          return { ...t, ...metrics };
+        });
+
+        // 2. Sort Descending by Priority Score (Highest Priority #1 First!)
+        scoredTasks.sort((a, b) => b.priorityScore - a.priorityScore);
+
+        // 3. Render Dashboard
+        renderDashboard(scoredTasks);
+        currentTasks = scoredTasks;
+        document.getElementById('exportCalBtn').style.display = 'inline-block';
+
+      } catch (err) {
+        console.error(err);
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Calculate Priority Schedule';
+      }
+    }
+
+    // 🎨 Render Dashboard
+    function renderDashboard(tasks) {
+      localStorage.setItem('uniflow_tasks', JSON.stringify(tasks));
+      const taskList = document.getElementById('taskList');
+      const statsBar = document.getElementById('statsBar');
+
+      if (!tasks || tasks.length === 0) {
+        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found in the provided text.</p></div>';
+        statsBar.style.display = 'none';
+        return;
+      }
+
+      // Update Summary Stats
+      statsBar.style.display = 'grid';
+      document.getElementById('totalTasksCount').textContent = tasks.length;
+      document.getElementById('urgentTasksCount').textContent = tasks.filter(t => t.priorityScore >= 50).length;
+      document.getElementById('topPriorityTask').textContent = tasks[0].course || tasks[0].title;
+
+      // Render Sorted Task Cards
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const rank = index + 1;
+        const card = document.createElement('div');
+        card.className = 'task-card';
+
+        const subtasksHtml = (task.subtasks && task.subtasks.length > 0)
+          ? `<div class="subtasks-section">
+               <div class="subtasks-title">Preparation Action Plan</div>
+               ${task.subtasks.map((st, i) => `
+                 <label class="subtask-item" id="st_${index}_${i}">
+                   <input type="checkbox" onchange="toggleSubtask(this)">
+                   <span>${st}</span>
+                 </label>
+               `).join('')}
+             </div>`
+          : '';
+
+        card.innerHTML = `
+          <div class="task-top">
+            <div class="task-header-left">
+              <span class="priority-rank">#${rank}</span>
+              <span class="priority-badge ${task.badgeClass}">${task.badgeLabel}</span>
+            </div>
+            <div class="score-badge">
+              <span class="score-value">${task.priorityScore}</span>
+              <span class="score-label">Priority Index</span>
+            </div>
+          </div>
+
+          <div class="task-title">📚 ${task.course}: ${task.title}</div>
+
+          <div class="meta-row">
+            <span class="meta-chip"><strong>Type:</strong> ${task.type}</span>
+            <span class="meta-chip"><strong>Due Date:</strong> ${task.dueDate} (${task.daysLeft}d left)</span>
+            <span class="meta-chip"><strong>Weight:</strong> ${task.weight}%</span>
+            <span class="meta-chip"><strong>Difficulty:</strong> ${task.difficultyOverride}/10</span>
+          </div>
+
+          ${subtasksHtml}
+        `;
+
+        taskList.appendChild(card);
+      });
+    }
+
+    // Toggle subtask line-through
+    function toggleSubtask(checkbox) {
+      const parent = checkbox.closest('.subtask-item');
+      if (checkbox.checked) {
+        parent.classList.add('completed');
+      } else {
+        parent.classList.remove('completed');
+      }
+    }
+
+    // Auto-load saved tasks on page startup
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('uniflow_tasks');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.length > 0) {
+        renderDashboard(parsed);
+      }
+    } catch (e) {
+      console.error('Failed to parse cached tasks:', e);
+    }
+  }
+});
+
+let currentTasks = []; // Global variable to hold current tasks
+
+function exportToICS() {
+  if (!currentTasks || currentTasks.length === 0) return;
+
+  let icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//UniFlow AI//Academic Planner//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH"
+  ];
+
+  currentTasks.forEach((task) => {
+    // Format date as YYYYMMDD
+    const cleanDate = task.dueDate.replace(/-/g, "");
+    const uid = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@uniflow.ai`;
+    const summary = `[${task.course}] ${task.title} (Weight: ${task.weight}%)`;
+    const description = `Priority: ${task.badgeLabel} (${task.priorityScore}/100)\\nDifficulty: ${task.difficultyOverride}/10\\nPlan:\\n` +
+      (task.subtasks ? task.subtasks.map(s => `- ${s}`).join('\\n') : '');
+
+    icsContent.push(
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${cleanDate}T090000Z`,
+      `DTSTART;VALUE=DATE:${cleanDate}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:${description}`,
+      "STATUS:CONFIRMED",
+      "END:VEVENT"
+    );
+  });
+
+  icsContent.push("END:VCALENDAR");
+
+  // Trigger browser download
+  const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "uniflow_schedule.ics");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+  </script>
+</body>
+</html>
+
