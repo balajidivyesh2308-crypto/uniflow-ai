@@ -2,8 +2,9 @@
 <!--
   =====================================================================
   UniFlow AI — Intelligent Academic Priority Scheduler
-  Designed & Built by Divyesh Balaji
+  Designed & Built by Divyesh Balaji (Year 1 DSAI @ NTU Singapore)
   "Turning academic chaos into structured, priority-driven execution."
+  Portfolio: https://balajidivyesh2308-crypto.github.io
   GitHub:    https://github.com/balajidivyesh2308-crypto/uniflow-ai
   =====================================================================
 -->
@@ -83,7 +84,7 @@
 
     textarea {
       width: 100%;
-      height: 130px;
+      height: 140px;
       background: #0d1322;
       border: 1px solid var(--card-border);
       border-radius: 8px;
@@ -372,8 +373,8 @@
             <button type="button" class="btn-secondary" onclick="clearSchedule()">Clear</button>
           </div>
           <div class="btn-group">
-            <button id="exportCalBtn" onclick="exportToICS()" style="background: #10b981; display: none;">📅 Export to Calendar (.ics)</button>
-            <button id="generateBtn" onclick="handleGenerate()">Calculate Priority Schedule</button>
+            <button type="button" id="exportCalBtn" onclick="exportToICS()" style="background: #10b981; display: none;">📅 Export to Calendar (.ics)</button>
+            <button type="button" id="generateBtn" onclick="handleGenerate()">Calculate Priority Schedule</button>
           </div>
         </div>
       </div>
@@ -410,7 +411,7 @@
     <!-- Personalization Message Footer -->
     <footer class="personal-footer">
       <div>
-        Built with ❤️ by <strong>Divyesh Balaji</strong> · DSAI @ NTU
+        Built with ❤️ by <strong>Divyesh Balaji</strong> DSAI @ NTU Singapore
       </div>
       <div>
         <em>"Built to turn heavy university coursework and overlapping deadlines into a clear, priority-driven daily plan."</em>
@@ -484,27 +485,29 @@
       };
     }
 
-    // Smart Client-Side Parser Fallback (Runs on GitHub Pages when localhost:5000 is not running)
+    // Smart Client-Side Parser (Works 100% in browser on GitHub Pages)
     function parseTasksClientSide(rawText) {
-      const segments = rawText
-        .split(/\n+|(?<=\d|%)\.\s+/)
+      // Split by newlines or sentence boundaries
+      const rawLines = rawText
+        .split(/\r?\n|(?<=\d|%)\.\s+/)
         .map(s => s.trim())
-        .filter(s => s.length > 6);
+        .filter(s => s.length > 5);
 
       const results = [];
 
-      segments.forEach((seg, idx) => {
-        // Ignore pure intro/outro conversational lines that lack task keywords
-        const looksLikeTask = /\b(due|in\s+\d+\s*days?|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weight|difficulty|exam|quiz|lab|tutorial|project|assignment|problem\s*set|pset|[A-Z]{2,4}\s?\d{3,4})\b/i.test(seg);
-        if (!looksLikeTask) return;
+      rawLines.forEach((seg) => {
+        // Filter out conversational intro/outro lines if multiple lines exist
+        const hasTaskSignal = /\b(due|in\s+\d+\s*days?|tomorrow|today|tonight|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weight|difficulty|exam|quiz|lab|tutorial|project|assignment|problem\s*set|pset|hrs?|hours?|[A-Z]{2,4}\s?\d{3,4})\b/i.test(seg);
+        if (!hasTaskSignal && rawLines.length > 1) return;
 
-        const clean = seg.replace(/^(\d+[\.\)]|\-|\*)\s*/, '').trim();
+        const clean = seg.replace(/^(\d+[\.\)]|\-|\*|•)\s*/, '').trim();
+        if (!clean) return;
 
-        // 1. Course code (e.g. SC1007, MH1810, CS101)
+        // 1. Extract Course Code (e.g., SC1007, MH1810, CS101)
         const courseMatch = clean.match(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b/);
-        const course = courseMatch ? courseMatch.toUpperCase().replace(/\s+/, '') : `TASK-0${results.length + 1}`;
+        const course = courseMatch ? courseMatch.toUpperCase().replace(/\s+/g, '') : `TASK-0${results.length + 1}`;
 
-        // 2. Task type
+        // 2. Detect Task Type
         let type = 'Assignment';
         if (/\b(midterm|final|exam)\b/i.test(clean)) type = 'Exam';
         else if (/\b(quiz|test)\b/i.test(clean)) type = 'Quiz';
@@ -512,12 +515,12 @@
         else if (/\b(project|build)\b/i.test(clean)) type = 'Project';
         else if (/\b(tutorial|problem\s*set|pset)\b/i.test(clean)) type = 'Tutorial / PSet';
 
-        // 3. Due date / days left
+        // 3. Extract Due Date / Days Left
         let daysOffset = 5;
         const inDays = clean.match(/(?:due\s+)?in\s+(\d+)\s*days?/i);
         const explicitDate = clean.match(/\b(202\d-\d{2}-\d{2})\b/);
 
-        if (inDays) {
+        if (inDays && inDays) {
           daysOffset = parseInt(inDays, 10);
         } else if (/\btomorrow\b/i.test(clean)) {
           daysOffset = 1;
@@ -535,7 +538,7 @@
         }
 
         let dueDate;
-        if (explicitDate) {
+        if (explicitDate && explicitDate) {
           dueDate = explicitDate;
         } else {
           const target = new Date();
@@ -543,28 +546,28 @@
           dueDate = target.toISOString().split('T')[0];
         }
 
-        // 4. Weight (%)
+        // 4. Extract Weight (%)
         let weight = type === 'Exam' ? 30 : (type === 'Quiz' || type === 'Project' ? 20 : 15);
         const weightMatch = clean.match(/weight\s*[:=]?\s*(\d+)\s*%?/i) || clean.match(/(\d+)\s*%/);
-        if (weightMatch) {
+        if (weightMatch && weightMatch) {
           weight = Math.min(100, Math.max(1, parseInt(weightMatch, 10)));
         }
 
-        // 5. Difficulty (1-10)
+        // 5. Extract Difficulty (1-10)
         let difficulty = 6;
         const diffMatch = clean.match(/difficulty\s*[:=]?\s*(\d+)(?:\s*\/\s*10)?/i);
         const hrsMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:hrs?|hours?)/i);
-        if (diffMatch) {
+        if (diffMatch && diffMatch) {
           difficulty = Math.min(10, Math.max(1, parseInt(diffMatch, 10)));
         } else if (/\bhigh\s*priority|critical|hard\b/i.test(clean)) {
           difficulty = 8;
         } else if (/\blow\s*priority|easy\b/i.test(clean)) {
           difficulty = 4;
-        } else if (hrsMatch) {
+        } else if (hrsMatch && hrsMatch) {
           difficulty = Math.min(10, Math.max(3, Math.round(parseFloat(hrsMatch) * 2)));
         }
 
-        // 6. Clean task title
+        // 6. Clean Task Title
         let title = clean
           .replace(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b\s*[:\-]?\s*/i, '')
           .replace(/,?\s*(?:due\s+)?in\s+\d+\s*days?/gi, '')
@@ -578,16 +581,16 @@
           title = `${type} Preparation`;
         }
 
-        // 7. Action plan subtasks
+        // 7. Action Plan Subtasks
         const subtasks = (type === 'Exam' || type === 'Quiz')
           ? [
-              `Review lecture notes and core concepts for ${course}`,
-              `Complete timed practice problems and past questions`,
+              `Review lecture notes and core formulas for ${course}`,
+              `Complete timed practice problems and past quiz questions`,
               `Revise weak areas and edge cases before ${dueDate}`
             ]
           : [
               `Break down ${course} requirements and set up workspace`,
-              `Complete core implementation / problem solutions`,
+              `Complete core implementation and problem solutions`,
               `Test edge cases, verify work, and submit before ${dueDate}`
             ];
 
@@ -602,10 +605,30 @@
         });
       });
 
+      // Fallback if the user typed a single freeform line without standard keywords
+      if (results.length === 0 && rawText.trim().length > 0) {
+        const target = new Date();
+        target.setDate(target.getDate() + 3);
+        const dueDate = target.toISOString().split('T')[0];
+        results.push({
+          course: 'GENERAL',
+          title: rawText.trim().substring(0, 80),
+          type: 'Study Block',
+          dueDate,
+          weight: 20,
+          difficultyOverride: 7,
+          subtasks: [
+            'Break this goal into 2 focused 45-minute study blocks',
+            'Complete primary deliverable and review notes',
+            `Finalize before ${dueDate}`
+          ]
+        });
+      }
+
       return results;
     }
 
-    // Handle Schedule Generation (Hybrid: Local Server first -> Client-Side Fallback on GitHub Pages)
+    // Handle Schedule Generation
     async function handleGenerate() {
       const btn = document.getElementById('generateBtn');
       const text = document.getElementById('syllabusInput').value;
@@ -619,28 +642,25 @@
       btn.textContent = 'Calculating Optimal Schedule... 🧠';
 
       let rawTasks = [];
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
-
-        const response = await fetch('http://localhost:5000/api/generate-schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rawText: text }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`Server status ${response.status}`);
+        if (isLocalhost) {
+          // Only attempt localhost:5000 if actually running on localhost
+          const response = await fetch('http://localhost:5000/api/generate-schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rawText: text })
+          });
+          if (!response.ok) throw new Error(`Server status ${response.status}`);
+          const data = await response.json();
+          rawTasks = data.parsedTasks || [];
+        } else {
+          // On GitHub Pages, run client-side parser directly
+          rawTasks = parseTasksClientSide(text);
         }
-
-        const data = await response.json();
-        rawTasks = data.parsedTasks || [];
       } catch (err) {
-        // Fallback when hosted statically on GitHub Pages
-        console.info('Local server unavailable — using built-in client-side priority parser.');
+        console.info('Using client-side priority parser:', err.message);
         rawTasks = parseTasksClientSide(text);
       }
 
@@ -657,14 +677,18 @@
 
         if (scoredTasks.length > 0) {
           document.getElementById('exportCalBtn').style.display = 'inline-block';
+          document.getElementById('statsBar').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+      } catch (renderErr) {
+        console.error(renderErr);
+        alert('Could not parse schedule: ' + renderErr.message);
       } finally {
         btn.disabled = false;
         btn.textContent = 'Calculate Priority Schedule';
       }
     }
 
-    // Render Dashboard
+    // Render Dashboard Cards below the input box
     function renderDashboard(tasks) {
       localStorage.setItem('uniflow_tasks', JSON.stringify(tasks));
 
@@ -672,7 +696,7 @@
       const statsBar = document.getElementById('statsBar');
 
       if (!tasks || tasks.length === 0) {
-        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found. Try including a course name, due date (e.g., "due in 4 days"), weight, or difficulty!</p></div>';
+        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found. Try clicking "Load Sample NTU Syllabus" to see an example format!</p></div>';
         statsBar.style.display = 'none';
         return;
       }
