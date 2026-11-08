@@ -1,9 +1,17 @@
 <!DOCTYPE html>
+<!--
+  =====================================================================
+  UniFlow AI — Intelligent Academic Priority Scheduler
+  Designed & Built by Divyesh Balaji
+  "Turning academic chaos into structured, priority-driven execution."
+  GitHub:    https://github.com/balajidivyesh2308-crypto/uniflow-ai
+  =====================================================================
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UniFlow AI - Intelligent Priority Scheduler</title>
+  <title>UniFlow AI - Intelligent Priority Scheduler | Divyesh Balaji</title>
   <style>
     :root {
       --bg: #0b0f19;
@@ -13,6 +21,8 @@
       --text-muted: #94a3b8;
       --primary: #3b82f6;
       --primary-hover: #2563eb;
+      --secondary: #1e293b;
+      --secondary-hover: #334155;
       --critical: #ef4444;
       --high: #f97316;
       --medium: #eab308;
@@ -28,11 +38,15 @@
       padding: 2rem 1rem;
       display: flex;
       justify-content: center;
+      min-height: 100vh;
     }
 
     .app-container {
       width: 100%;
       max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     /* Header */
@@ -40,6 +54,7 @@
       margin-bottom: 2rem;
       text-align: center;
     }
+
     .header h1 {
       font-size: 2.2rem;
       font-weight: 800;
@@ -47,9 +62,10 @@
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      color: transparent; /* Fallback for browsers supporting standard background-clip */
+      color: transparent;
       margin-bottom: 0.5rem;
     }
+
     .header p {
       color: var(--text-muted);
       font-size: 1rem;
@@ -64,48 +80,75 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
       margin-bottom: 2rem;
     }
+
     textarea {
       width: 100%;
-      height: 120px;
+      height: 130px;
       background: #0d1322;
       border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 1rem;
       color: var(--text);
       font-size: 0.95rem;
+      line-height: 1.5;
       resize: vertical;
       font-family: inherit;
     }
+
     textarea:focus {
       outline: none;
       border-color: var(--primary);
     }
+
     .btn-row {
       display: flex;
-      justify-content: flex-end;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       margin-top: 1rem;
     }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
     button {
       background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
-      padding: 0.75rem 1.5rem;
-      font-size: 0.95rem;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
+
     button:hover { background: var(--primary-hover); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--secondary-hover);
+      color: var(--text);
+    }
 
     /* Stats Bar */
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
+
     .stat-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -113,11 +156,13 @@
       padding: 1rem;
       text-align: center;
     }
+
     .stat-card .val {
       font-size: 1.6rem;
       font-weight: 700;
       color: #60a5fa;
     }
+
     .stat-card .lbl {
       font-size: 0.8rem;
       color: var(--text-muted);
@@ -132,9 +177,12 @@
       font-weight: 700;
       margin-bottom: 1rem;
       display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
       align-items: center;
       justify-content: space-between;
     }
+
     .formula-tag {
       font-size: 0.75rem;
       font-weight: normal;
@@ -154,6 +202,7 @@
       position: relative;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+
     .task-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
@@ -166,11 +215,13 @@
       align-items: flex-start;
       margin-bottom: 0.75rem;
     }
+
     .task-header-left {
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
+
     .priority-rank {
       font-size: 1.1rem;
       font-weight: 800;
@@ -179,6 +230,7 @@
       background: #0d1322;
       border: 1px solid var(--card-border);
     }
+
     .priority-badge {
       font-size: 0.75rem;
       font-weight: 700;
@@ -187,6 +239,7 @@
       border-radius: 4px;
       letter-spacing: 0.05em;
     }
+
     .badge-critical { background: rgba(239, 68, 68, 0.2); color: var(--critical); border: 1px solid var(--critical); }
     .badge-high { background: rgba(249, 115, 22, 0.2); color: var(--high); border: 1px solid var(--high); }
     .badge-medium { background: rgba(234, 179, 8, 0.2); color: var(--medium); border: 1px solid var(--medium); }
@@ -197,11 +250,13 @@
       flex-direction: column;
       align-items: flex-end;
     }
+
     .score-value {
       font-size: 1.3rem;
       font-weight: 800;
       color: #60a5fa;
     }
+
     .score-label {
       font-size: 0.65rem;
       color: var(--text-muted);
@@ -224,6 +279,7 @@
       font-size: 0.85rem;
       color: var(--text-muted);
     }
+
     .meta-chip {
       background: #0d1322;
       padding: 3px 10px;
@@ -239,6 +295,7 @@
       border: 1px solid var(--card-border);
       margin-top: 0.75rem;
     }
+
     .subtasks-title {
       font-size: 0.8rem;
       font-weight: 700;
@@ -246,17 +303,21 @@
       text-transform: uppercase;
       margin-bottom: 0.5rem;
     }
+
     .subtask-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.85rem;
       margin-bottom: 0.35rem;
+      cursor: pointer;
     }
+
     .subtask-item input {
       accent-color: var(--primary);
       cursor: pointer;
     }
+
     .subtask-item.completed span {
       text-decoration: line-through;
       color: var(--text-muted);
@@ -267,56 +328,127 @@
       padding: 3rem 1rem;
       color: var(--text-muted);
     }
+
+    /* Personalization Footer */
+    .personal-footer {
+      margin-top: 3rem;
+      padding: 1.5rem 1rem;
+      border-top: 1px solid var(--card-border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .personal-footer strong {
+      color: var(--text);
+    }
+
+    .personal-footer a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .personal-footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-
   <div class="app-container">
-    <div class="header">
-      <h1>🚀 UniFlow AI</h1>
-      <p>Algorithmic Priority Scheduling Powered by Gemini 3.5 Flash-Lite</p>
-    </div>
+    <main>
+      <div class="header">
+        <h1>🚀 UniFlow AI</h1>
+        <p>Algorithmic Priority Scheduling Powered by Gemini</p>
+      </div>
 
-    <!-- Input Box -->
-    <div class="input-card">
-      <textarea id="syllabusInput" placeholder="Paste assignments, exams, or syllabus excerpts here... (e.g. 'CS101 Problem Set 1 due in 5 days, weight 15%, difficulty 4. Midterm exam in 14 days, weight 30%, difficulty 8...')"></textarea>
-      <div class="btn-row" style="display: flex; gap: 10px;">
-         <button id="exportCalBtn" onclick="exportToICS()" style="background: #10b981; display: none;">📅 Export to Calendar (.ics)</button>
-         <button id="generateBtn" onclick="handleGenerate()">Calculate Priority Schedule</button>
+      <!-- Input Box -->
+      <div class="input-card">
+        <textarea id="syllabusInput" placeholder="Paste assignments, exams, or syllabus excerpts here... (e.g. 'SC1007 Data Structures Lab due in 3 days, weight 15%, difficulty 8. MH1810 Calculus Quiz in 4 days, weight 25%, difficulty 9...')"></textarea>
+        <div class="btn-row">
+          <div class="btn-group">
+            <button type="button" class="btn-secondary" onclick="loadSampleSyllabus()">Load Sample NTU Syllabus</button>
+            <button type="button" class="btn-secondary" onclick="clearSchedule()">Clear</button>
+          </div>
+          <div class="btn-group">
+            <button id="exportCalBtn" onclick="exportToICS()" style="background: #10b981; display: none;">📅 Export to Calendar (.ics)</button>
+            <button id="generateBtn" onclick="handleGenerate()">Calculate Priority Schedule</button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Overview Stats -->
-    <div class="stats-bar" id="statsBar" style="display: none;">
-      <div class="stat-card">
-        <div class="val" id="totalTasksCount">0</div>
-        <div class="lbl">Total Tasks</div>
+      <!-- Overview Stats -->
+      <div class="stats-bar" id="statsBar" style="display: none;">
+        <div class="stat-card">
+          <div class="val" id="totalTasksCount">0</div>
+          <div class="lbl">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="urgentTasksCount" style="color: var(--critical);">0</div>
+          <div class="lbl">Urgent / High Priority</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="topPriorityTask">-</div>
+          <div class="lbl">Top Priority Focus</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="val" id="urgentTasksCount" style="color: var(--critical);">0</div>
-        <div class="lbl">Urgent / High Priority</div>
-      </div>
-      <div class="stat-card">
-        <div class="val" id="topPriorityTask">-</div>
-        <div class="lbl">Top Priority Focus</div>
-      </div>
-    </div>
 
-    <!-- Task List Container -->
-    <div class="task-list-title">
-      <span>Priority Ordered Schedule</span>
-      <span class="formula-tag">Formula: Priority = (Weight × Difficulty) ÷ Days Left</span>
-    </div>
-
-    <div id="taskList">
-      <div class="empty-state">
-        <p>No tasks loaded yet. Paste your course details above and hit calculate!</p>
+      <!-- Task List Container -->
+      <div class="task-list-title">
+        <span>Priority Ordered Schedule</span>
+        <span class="formula-tag">Formula: Priority = ((Weight × 1.5) + (Difficulty × 6)) ÷ √Days Left</span>
       </div>
-    </div>
+
+      <div id="taskList">
+        <div class="empty-state">
+          <p>No tasks loaded yet. Paste your course details above (or click "Load Sample NTU Syllabus") and hit calculate!</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Personalization Message Footer -->
+    <footer class="personal-footer">
+      <div>
+        Built by <strong>Divyesh Balaji</strong> · Year 1 Data Science &amp; AI (DSAI) @ NTU Singapore
+      </div>
+      <div>
+        <em>"Built to turn heavy university coursework and overlapping deadlines into a clear, priority-driven daily plan."</em>
+      </div>
+      <div style="margin-top: 0.4rem;">
+        <a href="https://balajidivyesh2308-crypto.github.io" target="_blank" rel="noopener noreferrer">Portfolio Website ↗</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/balajidivyesh2308-crypto/uniflow-ai" target="_blank" rel="noopener noreferrer">GitHub Source ↗</a>
+        &nbsp;·&nbsp;
+        <a href="https://www.linkedin.com/in/divyeshbalaji" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+      </div>
+    </footer>
   </div>
 
   <script>
-    // 🧮 Priority Scoring Algorithm
+    let currentTasks = [];
+
+    // Load Sample NTU Syllabus for instant demo testing
+    function loadSampleSyllabus() {
+      document.getElementById('syllabusInput').value = [
+        "1. SC1007 Data Structures & Algorithms Lab (Merge Sort & complexity analysis) due in 3 days, weight 15%, difficulty 8.",
+        "2. MH1810 Calculus Quiz Prep (Integration & limits practice sheet) due in 4 days, weight 25%, difficulty 9.",
+        "3. MH1812 Discrete Mathematics Tutorial 4 (Graph theory & induction proofs) due in 6 days, weight 10%, difficulty 7.",
+        "4. SC1003 Intro to Computational Thinking Python Mini-Project due in 10 days, weight 20%, difficulty 6."
+      ].join("\n");
+    }
+
+    // Clear saved tasks and reset input
+    function clearSchedule() {
+      localStorage.removeItem('uniflow_tasks');
+      currentTasks = [];
+      document.getElementById('syllabusInput').value = '';
+      document.getElementById('statsBar').style.display = 'none';
+      document.getElementById('exportCalBtn').style.display = 'none';
+      document.getElementById('taskList').innerHTML = '<div class="empty-state"><p>No tasks loaded yet. Paste your course details above and hit calculate!</p></div>';
+    }
+
+    // Priority Scoring Algorithm
     function calculatePriorityScore(task) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -330,8 +462,6 @@
       const weight = Number(task.weight) || 10;
       const difficulty = Number(task.difficultyOverride) || 5;
 
-      // 🧠 UniFlow Priority Formula:
-      // Combines academic weight and cognitive effort against time pressure
       const rawScore = ((weight * 1.5) + (difficulty * 6)) / Math.max(0.8, Math.sqrt(daysLeft));
       const normalizedScore = Math.min(100, Math.round(rawScore));
 
@@ -357,77 +487,206 @@
       };
     }
 
-    // 🚀 Handle AI Generation
+    // Smart Client-Side Parser Fallback (Runs on GitHub Pages when localhost:5000 is not running)
+    function parseTasksClientSide(rawText) {
+      const segments = rawText
+        .split(/\n+|(?<=\d|%)\.\s+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 6);
+
+      const results = [];
+
+      segments.forEach((seg, idx) => {
+        // Ignore pure intro/outro conversational lines that lack task keywords
+        const looksLikeTask = /\b(due|in\s+\d+\s*days?|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weight|difficulty|exam|quiz|lab|tutorial|project|assignment|problem\s*set|pset|[A-Z]{2,4}\s?\d{3,4})\b/i.test(seg);
+        if (!looksLikeTask) return;
+
+        const clean = seg.replace(/^(\d+[\.\)]|\-|\*)\s*/, '').trim();
+
+        // 1. Course code (e.g. SC1007, MH1810, CS101)
+        const courseMatch = clean.match(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b/);
+        const course = courseMatch ? courseMatch.toUpperCase().replace(/\s+/, '') : `TASK-0${results.length + 1}`;
+
+        // 2. Task type
+        let type = 'Assignment';
+        if (/\b(midterm|final|exam)\b/i.test(clean)) type = 'Exam';
+        else if (/\b(quiz|test)\b/i.test(clean)) type = 'Quiz';
+        else if (/\b(lab|practical)\b/i.test(clean)) type = 'Lab';
+        else if (/\b(project|build)\b/i.test(clean)) type = 'Project';
+        else if (/\b(tutorial|problem\s*set|pset)\b/i.test(clean)) type = 'Tutorial / PSet';
+
+        // 3. Due date / days left
+        let daysOffset = 5;
+        const inDays = clean.match(/(?:due\s+)?in\s+(\d+)\s*days?/i);
+        const explicitDate = clean.match(/\b(202\d-\d{2}-\d{2})\b/);
+
+        if (inDays) {
+          daysOffset = parseInt(inDays, 10);
+        } else if (/\btomorrow\b/i.test(clean)) {
+          daysOffset = 1;
+        } else if (/\btoday|tonight\b/i.test(clean)) {
+          daysOffset = 1;
+        } else {
+          const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          const nowDay = new Date().getDay();
+          for (let d = 0; d < days.length; d++) {
+            if (new RegExp(`\\b${days[d]}\\b`, 'i').test(clean)) {
+              daysOffset = (d - nowDay + 7) % 7 || 7;
+              break;
+            }
+          }
+        }
+
+        let dueDate;
+        if (explicitDate) {
+          dueDate = explicitDate;
+        } else {
+          const target = new Date();
+          target.setDate(target.getDate() + Math.max(1, daysOffset));
+          dueDate = target.toISOString().split('T')[0];
+        }
+
+        // 4. Weight (%)
+        let weight = type === 'Exam' ? 30 : (type === 'Quiz' || type === 'Project' ? 20 : 15);
+        const weightMatch = clean.match(/weight\s*[:=]?\s*(\d+)\s*%?/i) || clean.match(/(\d+)\s*%/);
+        if (weightMatch) {
+          weight = Math.min(100, Math.max(1, parseInt(weightMatch, 10)));
+        }
+
+        // 5. Difficulty (1-10)
+        let difficulty = 6;
+        const diffMatch = clean.match(/difficulty\s*[:=]?\s*(\d+)(?:\s*\/\s*10)?/i);
+        const hrsMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:hrs?|hours?)/i);
+        if (diffMatch) {
+          difficulty = Math.min(10, Math.max(1, parseInt(diffMatch, 10)));
+        } else if (/\bhigh\s*priority|critical|hard\b/i.test(clean)) {
+          difficulty = 8;
+        } else if (/\blow\s*priority|easy\b/i.test(clean)) {
+          difficulty = 4;
+        } else if (hrsMatch) {
+          difficulty = Math.min(10, Math.max(3, Math.round(parseFloat(hrsMatch) * 2)));
+        }
+
+        // 6. Clean task title
+        let title = clean
+          .replace(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b\s*[:\-]?\s*/i, '')
+          .replace(/,?\s*(?:due\s+)?in\s+\d+\s*days?/gi, '')
+          .replace(/,?\s*weight\s*[:=]?\s*\d+\s*%?/gi, '')
+          .replace(/,?\s*difficulty\s*[:=]?\s*\d+(?:\s*\/\s*10)?/gi, '')
+          .replace(/[-–]\s*Due\s+.*$/i, '')
+          .replace(/\.\s*$/, '')
+          .trim();
+
+        if (!title || title.length < 3) {
+          title = `${type} Preparation`;
+        }
+
+        // 7. Action plan subtasks
+        const subtasks = (type === 'Exam' || type === 'Quiz')
+          ? [
+              `Review lecture notes and core concepts for ${course}`,
+              `Complete timed practice problems and past questions`,
+              `Revise weak areas and edge cases before ${dueDate}`
+            ]
+          : [
+              `Break down ${course} requirements and set up workspace`,
+              `Complete core implementation / problem solutions`,
+              `Test edge cases, verify work, and submit before ${dueDate}`
+            ];
+
+        results.push({
+          course,
+          title,
+          type,
+          dueDate,
+          weight,
+          difficultyOverride: difficulty,
+          subtasks
+        });
+      });
+
+      return results;
+    }
+
+    // Handle Schedule Generation (Hybrid: Local Server first -> Client-Side Fallback on GitHub Pages)
     async function handleGenerate() {
       const btn = document.getElementById('generateBtn');
       const text = document.getElementById('syllabusInput').value;
 
       if (!text.trim()) {
-        alert('Please paste some course or assignment details first!');
+        alert('Please paste some course or assignment details first (or click "Load Sample NTU Syllabus")!');
         return;
       }
 
       btn.disabled = true;
       btn.textContent = 'Calculating Optimal Schedule... 🧠';
 
+      let rawTasks = [];
+
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+
         const response = await fetch('http://localhost:5000/api/generate-schedule', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rawText: text })
+          body: JSON.stringify({ rawText: text }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || `Server responded with ${response.status}`);
+          throw new Error(`Server status ${response.status}`);
         }
 
         const data = await response.json();
-        const rawTasks = data.parsedTasks || [];
+        rawTasks = data.parsedTasks || [];
+      } catch (err) {
+        // Fallback when hosted statically on GitHub Pages
+        console.info('Local server unavailable — using built-in client-side priority parser.');
+        rawTasks = parseTasksClientSide(text);
+      }
 
-        // 1. Calculate Priority for each task
-        const scoredTasks = rawTasks.map(t => {
-          const metrics = calculatePriorityScore(t);
-          return { ...t, ...metrics };
-        });
+      try {
+        const scoredTasks = rawTasks.map(t => ({
+          ...t,
+          ...calculatePriorityScore(t)
+        }));
 
-        // 2. Sort Descending by Priority Score (Highest Priority #1 First!)
         scoredTasks.sort((a, b) => b.priorityScore - a.priorityScore);
 
-        // 3. Render Dashboard
-        renderDashboard(scoredTasks);
         currentTasks = scoredTasks;
-        document.getElementById('exportCalBtn').style.display = 'inline-block';
+        renderDashboard(scoredTasks);
 
-      } catch (err) {
-        console.error(err);
-        alert('Error: ' + err.message);
+        if (scoredTasks.length > 0) {
+          document.getElementById('exportCalBtn').style.display = 'inline-block';
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = 'Calculate Priority Schedule';
       }
     }
 
-    // 🎨 Render Dashboard
+    // Render Dashboard
     function renderDashboard(tasks) {
       localStorage.setItem('uniflow_tasks', JSON.stringify(tasks));
+
       const taskList = document.getElementById('taskList');
       const statsBar = document.getElementById('statsBar');
 
       if (!tasks || tasks.length === 0) {
-        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found in the provided text.</p></div>';
+        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found. Try including a course name, due date (e.g., "due in 4 days"), weight, or difficulty!</p></div>';
         statsBar.style.display = 'none';
         return;
       }
 
-      // Update Summary Stats
       statsBar.style.display = 'grid';
       document.getElementById('totalTasksCount').textContent = tasks.length;
       document.getElementById('urgentTasksCount').textContent = tasks.filter(t => t.priorityScore >= 50).length;
       document.getElementById('topPriorityTask').textContent = tasks[0].course || tasks[0].title;
 
-      // Render Sorted Task Cards
       taskList.innerHTML = '';
+
       tasks.forEach((task, index) => {
         const rank = index + 1;
         const card = document.createElement('div');
@@ -456,16 +715,13 @@
               <span class="score-label">Priority Index</span>
             </div>
           </div>
-
           <div class="task-title">📚 ${task.course}: ${task.title}</div>
-
           <div class="meta-row">
             <span class="meta-chip"><strong>Type:</strong> ${task.type}</span>
             <span class="meta-chip"><strong>Due Date:</strong> ${task.dueDate} (${task.daysLeft}d left)</span>
             <span class="meta-chip"><strong>Weight:</strong> ${task.weight}%</span>
             <span class="meta-chip"><strong>Difficulty:</strong> ${task.difficultyOverride}/10</span>
           </div>
-
           ${subtasksHtml}
         `;
 
@@ -473,79 +729,70 @@
       });
     }
 
-    // Toggle subtask line-through
     function toggleSubtask(checkbox) {
       const parent = checkbox.closest('.subtask-item');
-      if (checkbox.checked) {
-        parent.classList.add('completed');
-      } else {
-        parent.classList.remove('completed');
-      }
+      parent.classList.toggle('completed', checkbox.checked);
     }
 
     // Auto-load saved tasks on page startup
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('uniflow_tasks');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      if (parsed.length > 0) {
-        renderDashboard(parsed);
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('uniflow_tasks');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length > 0) {
+            currentTasks = parsed;
+            renderDashboard(parsed);
+            document.getElementById('exportCalBtn').style.display = 'inline-block';
+          }
+        } catch (e) {
+          console.error('Failed to parse cached tasks:', e);
+        }
       }
-    } catch (e) {
-      console.error('Failed to parse cached tasks:', e);
+    });
+
+    // Export schedule to .ics calendar file
+    function exportToICS() {
+      if (!currentTasks || currentTasks.length === 0) return;
+
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//UniFlow AI//Academic Planner//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH"
+      ];
+
+      currentTasks.forEach((task) => {
+        const cleanDate = task.dueDate.replace(/-/g, "");
+        const uid = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@uniflow.ai`;
+        const summary = `[${task.course}] ${task.title} (Weight: ${task.weight}%)`;
+        const description = `Priority: ${task.badgeLabel} (${task.priorityScore}/100)\\nDifficulty: ${task.difficultyOverride}/10\\nPlan:\\n` +
+          (task.subtasks ? task.subtasks.map(s => `- ${s}`).join('\\n') : '');
+
+        icsContent.push(
+          "BEGIN:VEVENT",
+          `UID:${uid}`,
+          `DTSTAMP:${cleanDate}T090000Z`,
+          `DTSTART;VALUE=DATE:${cleanDate}`,
+          `SUMMARY:${summary}`,
+          `DESCRIPTION:${description}`,
+          "STATUS:CONFIRMED",
+          "END:VEVENT"
+        );
+      });
+
+      icsContent.push("END:VCALENDAR");
+
+      const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "uniflow_schedule.ics");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-  }
-});
-
-let currentTasks = []; // Global variable to hold current tasks
-
-function exportToICS() {
-  if (!currentTasks || currentTasks.length === 0) return;
-
-  let icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//UniFlow AI//Academic Planner//EN",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH"
-  ];
-
-  currentTasks.forEach((task) => {
-    // Format date as YYYYMMDD
-    const cleanDate = task.dueDate.replace(/-/g, "");
-    const uid = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@uniflow.ai`;
-    const summary = `[${task.course}] ${task.title} (Weight: ${task.weight}%)`;
-    const description = `Priority: ${task.badgeLabel} (${task.priorityScore}/100)\\nDifficulty: ${task.difficultyOverride}/10\\nPlan:\\n` +
-      (task.subtasks ? task.subtasks.map(s => `- ${s}`).join('\\n') : '');
-
-    icsContent.push(
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${cleanDate}T090000Z`,
-      `DTSTART;VALUE=DATE:${cleanDate}`,
-      `SUMMARY:${summary}`,
-      `DESCRIPTION:${description}`,
-      "STATUS:CONFIRMED",
-      "END:VEVENT"
-    );
-  });
-
-  icsContent.push("END:VCALENDAR");
-
-  // Trigger browser download
-  const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", "uniflow_schedule.ics");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-
   </script>
 </body>
 </html>
-
