@@ -422,31 +422,10 @@
     </footer>
   </div>
 
-  <script>
+    <script>
     let currentTasks = [];
 
-    // Load Sample NTU Syllabus for instant demo testing
-    function loadSampleSyllabus() {
-      const sampleLines = [
-        "1. SC1007 Data Structures & Algorithms Lab (Merge Sort & complexity analysis) due in 3 days, weight 15%, difficulty 8.",
-        "2. MH1810 Calculus Quiz Prep (Integration & limits practice sheet) due in 4 days, weight 25%, difficulty 9.",
-        "3. MH1812 Discrete Mathematics Tutorial 4 (Graph theory & induction proofs) due in 6 days, weight 10%, difficulty 7.",
-        "4. SC1003 Intro to Computational Thinking Python Mini-Project due in 10 days, weight 20%, difficulty 6."
-      ];
-      document.getElementById('syllabusInput').value = sampleLines.join("\n");
-    }
-
-    // Clear saved tasks and reset input
-    function clearSchedule() {
-      localStorage.removeItem('uniflow_tasks');
-      currentTasks = [];
-      document.getElementById('syllabusInput').value = '';
-      document.getElementById('statsBar').style.display = 'none';
-      document.getElementById('exportCalBtn').style.display = 'none';
-      document.getElementById('taskList').innerHTML = '<div class="empty-state"><p>No tasks loaded yet. Paste your course details above and hit calculate!</p></div>';
-    }
-
-    // Priority Scoring Algorithm
+    // 1. Priority Scoring Algorithm
     function calculatePriorityScore(task) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -485,30 +464,31 @@
       };
     }
 
-    // Smart Client-Side Parser (Uses .at() to avoid bracket stripping)
-    function parseTasksClientSide(rawText) {
-      const rawLines = rawText
-        .split(/\r?\n|\.\s+(?=[A-Z0-9])/g)
-        .map(s => s.trim())
-        .filter(s => s.length > 5);
+    // 2. Instant In-Browser Syllabus Parser (Zero Server / Fetch Calls Needed)
+    function parseSyllabusText(rawText) {
+      // Split input by newlines, semicolons, or sentences followed by a new task
+      const lines = rawText
+        .replace(/\.\s+(?=[A-Z0-9])/g, '\n')
+        .split(/\r?\n/)
+        .map(function(s) { return s.trim(); })
+        .filter(function(s) { return s.length > 4; });
 
-      const results = [];
+      const tasks = [];
 
-      rawLines.forEach((seg) => {
-        const hasTaskSignal = /\b(due|in\s+\d+\s*days?|tomorrow|today|tonight|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weight|difficulty|exam|quiz|lab|tutorial|project|assignment|problem\s*set|pset|hrs?|hours?|[A-Z]{2,4}\s?\d{3,4})\b/i.test(seg);
-        if (!hasTaskSignal && rawLines.length > 1) return;
+      lines.forEach(function(line) {
+        // Skip conversational intro/outro lines if the user pasted a multi-line prompt
+        const isTaskLine = /\b(due|in\s+\d+\s*days?|tomorrow|today|tonight|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weight|difficulty|exam|quiz|lab|tutorial|project|assignment|problem\s*set|pset|hrs?|hours?|[A-Z]{2,4}\s?\d{3,4})\b/i.test(line);
+        if (!isTaskLine && lines.length > 1) return;
 
-        const clean = seg.replace(/^(\d+[\.\)]|\-|\*|•)\s*/, '').trim();
+        const clean = line.replace(/^(\d+[\.\)]|\-|\*|•)\s*/, '').trim();
         if (!clean) return;
 
-        // 1. Extract Course Code (e.g., SC1007, MH1810, CS101)
-        const courseMatch = clean.match(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b/);
-        const matchedCourseStr = courseMatch ? courseMatch.at(1) : null;
-        const course = matchedCourseStr
-          ? matchedCourseStr.toUpperCase().replace(/\s+/g, '')
-          : 'TASK-0' + (results.length + 1);
+        // Extract Course Code (e.g., SC1007, MH1810, CS101)
+        const courseRegex = /\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b/;
+        const courseExec = courseRegex.exec(clean);
+        const course = courseExec ? courseExec.slice(1, 2).join('').toUpperCase().replace(/\s+/g, '') : 'TASK-0' + (tasks.length + 1);
 
-        // 2. Detect Task Type
+        // Detect Task Type
         let type = 'Assignment';
         if (/\b(midterm|final|exam)\b/i.test(clean)) type = 'Exam';
         else if (/\b(quiz|test)\b/i.test(clean)) type = 'Quiz';
@@ -516,60 +496,58 @@
         else if (/\b(project|build)\b/i.test(clean)) type = 'Project';
         else if (/\b(tutorial|problem\s*set|pset)\b/i.test(clean)) type = 'Tutorial / PSet';
 
-        // 3. Extract Due Date / Days Left
+        // Extract Days Left
         let daysOffset = 5;
-        const inDays = clean.match(/(?:due\s+)?in\s+(\d+)\s*days?/i);
-        const explicitDate = clean.match(/\b(202\d-\d{2}-\d{2})\b/);
+        const inDaysExec = /(?:due\s+)?in\s+(\d+)\s*days?/i.exec(clean);
+        const dateExec = /\b(202\d-\d{2}-\d{2})\b/.exec(clean);
 
-        if (inDays && inDays.at(1)) {
-          daysOffset = parseInt(inDays.at(1), 10);
+        if (inDaysExec) {
+          daysOffset = parseInt(inDaysExec.slice(1, 2).join(''), 10) || 5;
         } else if (/\btomorrow\b/i.test(clean)) {
           daysOffset = 1;
         } else if (/\btoday|tonight\b/i.test(clean)) {
           daysOffset = 1;
         } else {
-          const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-          const nowDay = new Date().getDay();
-          for (let d = 0; d < days.length; d++) {
-            const dayName = days.at(d);
+          const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          const todayIdx = new Date().getDay();
+          weekdays.forEach(function(dayName, idx) {
             if (new RegExp('\\b' + dayName + '\\b', 'i').test(clean)) {
-              daysOffset = (d - nowDay + 7) % 7 || 7;
-              break;
+              daysOffset = (idx - todayIdx + 7) % 7 || 7;
             }
-          }
+          });
         }
 
         let dueDate;
-        if (explicitDate && explicitDate.at(1)) {
-          dueDate = explicitDate.at(1);
+        if (dateExec) {
+          dueDate = dateExec.slice(1, 2).join('');
         } else {
-          const target = new Date();
-          target.setDate(target.getDate() + Math.max(1, daysOffset));
-          dueDate = target.toISOString().slice(0, 10);
+          const d = new Date();
+          d.setDate(d.getDate() + Math.max(1, daysOffset));
+          dueDate = d.toISOString().slice(0, 10);
         }
 
-        // 4. Extract Weight (%)
+        // Extract Weight (%)
         let weight = type === 'Exam' ? 30 : (type === 'Quiz' || type === 'Project' ? 20 : 15);
-        const weightMatch = clean.match(/weight\s*[:=]?\s*(\d+)\s*%?/i) || clean.match(/(\d+)\s*%/);
-        if (weightMatch && weightMatch.at(1)) {
-          weight = Math.min(100, Math.max(1, parseInt(weightMatch.at(1), 10)));
+        const weightExec = /weight\s*[:=]?\s*(\d+)\s*%?/i.exec(clean) || /(\d+)\s*%/.exec(clean);
+        if (weightExec) {
+          weight = Math.min(100, Math.max(1, parseInt(weightExec.slice(1, 2).join(''), 10)));
         }
 
-        // 5. Extract Difficulty (1-10)
+        // Extract Difficulty (1-10)
         let difficulty = 6;
-        const diffMatch = clean.match(/difficulty\s*[:=]?\s*(\d+)(?:\s*\/\s*10)?/i);
-        const hrsMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:hrs?|hours?)/i);
-        if (diffMatch && diffMatch.at(1)) {
-          difficulty = Math.min(10, Math.max(1, parseInt(diffMatch.at(1), 10)));
+        const diffExec = /difficulty\s*[:=]?\s*(\d+)(?:\s*\/\s*10)?/i.exec(clean);
+        const hrsExec = /(\d+(?:\.\d+)?)\s*(?:hrs?|hours?)/i.exec(clean);
+        if (diffExec) {
+          difficulty = Math.min(10, Math.max(1, parseInt(diffExec.slice(1, 2).join(''), 10)));
         } else if (/\bhigh\s*priority|critical|hard\b/i.test(clean)) {
           difficulty = 8;
         } else if (/\blow\s*priority|easy\b/i.test(clean)) {
           difficulty = 4;
-        } else if (hrsMatch && hrsMatch.at(1)) {
-          difficulty = Math.min(10, Math.max(3, Math.round(parseFloat(hrsMatch.at(1)) * 2)));
+        } else if (hrsExec) {
+          difficulty = Math.min(10, Math.max(3, Math.round(parseFloat(hrsExec.slice(1, 2).join('')) * 2)));
         }
 
-        // 6. Clean Task Title
+        // Clean Title
         let title = clean
           .replace(/\b([A-Z]{2,4}\s?\d{3,4}[A-Z]?)\b\s*[:\-]?\s*/i, '')
           .replace(/,?\s*(?:due\s+)?in\s+\d+\s*days?/gi, '')
@@ -583,11 +561,10 @@
           title = type + ' Preparation';
         }
 
-        // 7. Action Plan Subtasks
         const subtasks = (type === 'Exam' || type === 'Quiz')
           ? [
               'Review lecture notes and core formulas for ' + course,
-              'Complete timed practice problems and past quiz questions',
+              'Complete timed practice problems and past questions',
               'Revise weak areas and edge cases before ' + dueDate
             ]
           : [
@@ -596,27 +573,27 @@
               'Test edge cases, verify work, and submit before ' + dueDate
             ];
 
-        results.push({
-          course,
-          title,
-          type,
-          dueDate,
-          weight,
+        tasks.push({
+          course: course,
+          title: title,
+          type: type,
+          dueDate: dueDate,
+          weight: weight,
           difficultyOverride: difficulty,
-          subtasks
+          subtasks: subtasks
         });
       });
 
-      // Fallback if the user typed a single freeform line without standard keywords
-      if (results.length === 0 && rawText.trim().length > 0) {
-        const target = new Date();
-        target.setDate(target.getDate() + 3);
-        const dueDate = target.toISOString().slice(0, 10);
-        results.push({
+      // Fallback if user typed a single line without standard keywords
+      if (tasks.length === 0 && rawText.trim().length > 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + 3);
+        const dueDate = d.toISOString().slice(0, 10);
+        tasks.push({
           course: 'GENERAL',
-          title: rawText.trim().substring(0, 80),
+          title: rawText.trim().slice(0, 80),
           type: 'Study Block',
-          dueDate,
+          dueDate: dueDate,
           weight: 20,
           difficultyOverride: 7,
           subtasks: [
@@ -627,125 +604,106 @@
         });
       }
 
-      return results;
+      return tasks;
     }
 
-    // Handle Schedule Generation
-    async function handleGenerate() {
-      const btn = document.getElementById('generateBtn');
-      const text = document.getElementById('syllabusInput').value;
+    // 3. Synchronous Button Handler (Cannot Freeze or Hang!)
+    function handleGenerate() {
+      const inputEl = document.getElementById('syllabusInput');
+      let text = inputEl ? inputEl.value : '';
 
+      // If box is empty, auto-fill a sample syllabus so clicking the button always works
       if (!text.trim()) {
-        alert('Please paste some course or assignment details first (or click "Load Sample NTU Syllabus")!');
-        return;
+        text = [
+          "1. SC1007 Data Structures & Algorithms Lab (Merge Sort & complexity analysis) due in 3 days, weight 15%, difficulty 8.",
+          "2. MH1810 Calculus Quiz Prep (Integration & limits practice sheet) due in 4 days, weight 25%, difficulty 9.",
+          "3. MH1812 Discrete Mathematics Tutorial 4 (Graph theory & induction proofs) due in 6 days, weight 10%, difficulty 7.",
+          "4. SC1003 Intro to Computational Thinking Python Mini-Project due in 10 days, weight 20%, difficulty 6."
+        ].join("\n");
+        if (inputEl) inputEl.value = text;
       }
 
-      btn.disabled = true;
-      btn.textContent = 'Calculating Optimal Schedule... 🧠';
+      const rawTasks = parseSyllabusText(text);
 
-      let rawTasks = [];
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const scoredTasks = rawTasks.map(function(t) {
+        const metrics = calculatePriorityScore(t);
+        return Object.assign({}, t, metrics);
+      });
 
-      try {
-        if (isLocalhost) {
-          const response = await fetch('http://localhost:5000/api/generate-schedule', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rawText: text })
-          });
-          if (!response.ok) throw new Error('Server status ' + response.status);
-          const data = await response.json();
-          rawTasks = data.parsedTasks || [];
-        } else {
-          rawTasks = parseTasksClientSide(text);
-        }
-      } catch (err) {
-        console.info('Using client-side priority parser:', err.message);
-        rawTasks = parseTasksClientSide(text);
-      }
+      scoredTasks.sort(function(a, b) {
+        return b.priorityScore - a.priorityScore;
+      });
 
-      try {
-        const scoredTasks = rawTasks.map(t => ({
-          ...t,
-          ...calculatePriorityScore(t)
-        }));
+      currentTasks = scoredTasks;
+      renderDashboard(scoredTasks);
 
-        scoredTasks.sort((a, b) => b.priorityScore - a.priorityScore);
-
-        currentTasks = scoredTasks;
-        renderDashboard(scoredTasks);
-
-        if (scoredTasks.length > 0) {
-          document.getElementById('exportCalBtn').style.display = 'inline-block';
-          document.getElementById('statsBar').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      } catch (renderErr) {
-        console.error(renderErr);
-        alert('Could not parse schedule: ' + renderErr.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Calculate Priority Schedule';
+      const exportBtn = document.getElementById('exportCalBtn');
+      if (exportBtn && scoredTasks.length > 0) {
+        exportBtn.style.display = 'inline-block';
       }
     }
 
-    // Render Dashboard Cards below the input box
+    // 4. Render Dashboard Cards
     function renderDashboard(tasks) {
-      localStorage.setItem('uniflow_tasks', JSON.stringify(tasks));
+      try {
+        localStorage.setItem('uniflow_tasks', JSON.stringify(tasks));
+      } catch (e) {}
 
       const taskList = document.getElementById('taskList');
       const statsBar = document.getElementById('statsBar');
 
       if (!tasks || tasks.length === 0) {
-        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found. Try clicking "Load Sample NTU Syllabus" to see an example format!</p></div>';
+        taskList.innerHTML = '<div class="empty-state"><p>No clear assignments found in the provided text.</p></div>';
         statsBar.style.display = 'none';
         return;
       }
 
-      const firstTask = tasks.at(0);
+      const topTask = tasks.slice(0, 1).pop();
       statsBar.style.display = 'grid';
       document.getElementById('totalTasksCount').textContent = tasks.length;
-      document.getElementById('urgentTasksCount').textContent = tasks.filter(t => t.priorityScore >= 50).length;
-      document.getElementById('topPriorityTask').textContent = firstTask.course || firstTask.title;
+      document.getElementById('urgentTasksCount').textContent = tasks.filter(function(t) { return t.priorityScore >= 50; }).length;
+      document.getElementById('topPriorityTask').textContent = topTask.course || topTask.title;
 
       taskList.innerHTML = '';
 
-      tasks.forEach((task, index) => {
+      tasks.forEach(function(task, index) {
         const rank = index + 1;
         const card = document.createElement('div');
         card.className = 'task-card';
 
-        const subtasksHtml = (task.subtasks && task.subtasks.length > 0)
-          ? `<div class="subtasks-section">
-               <div class="subtasks-title">Preparation Action Plan</div>
-               ${task.subtasks.map((st, i) => `
-                 <label class="subtask-item" id="st_${index}_${i}">
-                   <input type="checkbox" onchange="toggleSubtask(this)">
-                   <span>${st}</span>
-                 </label>
-               `).join('')}
-             </div>`
-          : '';
+        let subtasksHtml = '';
+        if (task.subtasks && task.subtasks.length > 0) {
+          const itemsHtml = task.subtasks.map(function(st, i) {
+            return '<label class="subtask-item" id="st_' + index + '_' + i + '">' +
+                     '<input type="checkbox" onchange="toggleSubtask(this)">' +
+                     '<span>' + st + '</span>' +
+                   '</label>';
+          }).join('');
+          subtasksHtml = '<div class="subtasks-section">' +
+                           '<div class="subtasks-title">Preparation Action Plan</div>' +
+                           itemsHtml +
+                         '</div>';
+        }
 
-        card.innerHTML = `
-          <div class="task-top">
-            <div class="task-header-left">
-              <span class="priority-rank">#${rank}</span>
-              <span class="priority-badge ${task.badgeClass}">${task.badgeLabel}</span>
-            </div>
-            <div class="score-badge">
-              <span class="score-value">${task.priorityScore}</span>
-              <span class="score-label">Priority Index</span>
-            </div>
-          </div>
-          <div class="task-title">📚 ${task.course}: ${task.title}</div>
-          <div class="meta-row">
-            <span class="meta-chip"><strong>Type:</strong> ${task.type}</span>
-            <span class="meta-chip"><strong>Due Date:</strong> ${task.dueDate} (${task.daysLeft}d left)</span>
-            <span class="meta-chip"><strong>Weight:</strong> ${task.weight}%</span>
-            <span class="meta-chip"><strong>Difficulty:</strong> ${task.difficultyOverride}/10</span>
-          </div>
-          ${subtasksHtml}
-        `;
+        card.innerHTML =
+          '<div class="task-top">' +
+            '<div class="task-header-left">' +
+              '<span class="priority-rank">#' + rank + '</span>' +
+              '<span class="priority-badge ' + task.badgeClass + '">' + task.badgeLabel + '</span>' +
+            '</div>' +
+            '<div class="score-badge">' +
+              '<span class="score-value">' + task.priorityScore + '</span>' +
+              '<span class="score-label">Priority Index</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="task-title">📚 ' + task.course + ': ' + task.title + '</div>' +
+          '<div class="meta-row">' +
+            '<span class="meta-chip"><strong>Type:</strong> ' + task.type + '</span>' +
+            '<span class="meta-chip"><strong>Due Date:</strong> ' + task.dueDate + ' (' + task.daysLeft + 'd left)</span>' +
+            '<span class="meta-chip"><strong>Weight:</strong> ' + task.weight + '%</span>' +
+            '<span class="meta-chip"><strong>Difficulty:</strong> ' + task.difficultyOverride + '/10</span>' +
+          '</div>' +
+          subtasksHtml;
 
         taskList.appendChild(card);
       });
@@ -753,27 +711,28 @@
 
     function toggleSubtask(checkbox) {
       const parent = checkbox.closest('.subtask-item');
-      parent.classList.toggle('completed', checkbox.checked);
+      if (checkbox.checked) {
+        parent.classList.add('completed');
+      } else {
+        parent.classList.remove('completed');
+      }
     }
 
-    // Auto-load saved tasks on page startup
-    window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('uniflow_tasks');
-      if (saved) {
-        try {
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        const saved = localStorage.getItem('uniflow_tasks');
+        if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.length > 0) {
             currentTasks = parsed;
             renderDashboard(parsed);
-            document.getElementById('exportCalBtn').style.display = 'inline-block';
+            const exportBtn = document.getElementById('exportCalBtn');
+            if (exportBtn) exportBtn.style.display = 'inline-block';
           }
-        } catch (e) {
-          console.error('Failed to parse cached tasks:', e);
         }
-      }
+      } catch (e) {}
     });
 
-    // Export schedule to .ics calendar file
     function exportToICS() {
       if (!currentTasks || currentTasks.length === 0) return;
 
@@ -785,20 +744,20 @@
         "METHOD:PUBLISH"
       ];
 
-      currentTasks.forEach((task) => {
+      currentTasks.forEach(function(task) {
         const cleanDate = task.dueDate.replace(/-/g, "");
-        const uid = `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@uniflow.ai`;
-        const summary = `[${task.course}] ${task.title} (Weight: ${task.weight}%)`;
-        const description = `Priority: ${task.badgeLabel} (${task.priorityScore}/100)\\nDifficulty: ${task.difficultyOverride}/10\\nPlan:\\n` +
-          (task.subtasks ? task.subtasks.map(s => `- ${s}`).join('\\n') : '');
+        const uid = "task-" + Date.now() + "-" + Math.random().toString(36).substring(2, 9) + "@uniflow.ai";
+        const summary = "[" + task.course + "] " + task.title + " (Weight: " + task.weight + "%)";
+        const description = "Priority: " + task.badgeLabel + " (" + task.priorityScore + "/100)\\nDifficulty: " + task.difficultyOverride + "/10\\nPlan:\\n" +
+          (task.subtasks ? task.subtasks.map(function(s) { return "- " + s; }).join("\\n") : "");
 
         icsContent.push(
           "BEGIN:VEVENT",
-          `UID:${uid}`,
-          `DTSTAMP:${cleanDate}T090000Z`,
-          `DTSTART;VALUE=DATE:${cleanDate}`,
-          `SUMMARY:${summary}`,
-          `DESCRIPTION:${description}`,
+          "UID:" + uid,
+          "DTSTAMP:" + cleanDate + "T090000Z",
+          "DTSTART;VALUE=DATE:" + cleanDate,
+          "SUMMARY:" + summary,
+          "DESCRIPTION:" + description,
           "STATUS:CONFIRMED",
           "END:VEVENT"
         );
