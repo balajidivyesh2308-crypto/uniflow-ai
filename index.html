@@ -424,6 +424,36 @@
 
     <script>
     let currentTasks = [];
+          // Load Sample NTU Syllabus (and automatically calculate the schedule)
+    function loadSampleSyllabus() {
+      const sampleText = [
+        "1. SC1007 Data Structures & Algorithms Lab (Merge Sort & complexity analysis) due in 3 days, weight 15%, difficulty 8.",
+        "2. MH1810 Calculus Quiz Prep (Integration & limits practice sheet) due in 4 days, weight 25%, difficulty 9.",
+        "3. MH1812 Discrete Mathematics Tutorial 4 (Graph theory & induction proofs) due in 6 days, weight 10%, difficulty 7.",
+        "4. SC1003 Intro to Computational Thinking Python Mini-Project due in 10 days, weight 20%, difficulty 6."
+      ].join("\n");
+
+      const inputEl = document.getElementById('syllabusInput');
+      if (inputEl) {
+        inputEl.value = sampleText;
+        handleGenerate(); // Automatically calculates & renders the cards right away!
+      }
+    }
+
+    // Clear button handler
+    function clearSchedule() {
+      try {
+        localStorage.removeItem('uniflow_tasks');
+      } catch (e) {}
+      currentTasks = [];
+      const inputEl = document.getElementById('syllabusInput');
+      if (inputEl) inputEl.value = '';
+      document.getElementById('statsBar').style.display = 'none';
+      document.getElementById('exportCalBtn').style.display = 'none';
+      document.getElementById('taskList').innerHTML =
+        '<div class="empty-state"><p>No tasks loaded yet. Paste your course details above and hit calculate!</p></div>';
+    }
+
 
     // 1. Priority Scoring Algorithm
     function calculatePriorityScore(task) {
