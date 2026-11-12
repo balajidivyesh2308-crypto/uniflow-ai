@@ -2,7 +2,7 @@
 
 An algorithmic academic planning and priority scheduling tool built to turn heavy university coursework and overlapping deadlines into a clear, ranked execution plan.
 
-**Live Web App:** [balajidivyesh2308-crypto.github.io/uniflow-ai](https://balajidivyesh2308-crypto.github.io/uniflow-ai/)  
+**Live Web App:** [divyesh-balaji.io/uniflow-ai](https://divyesh-balaji.github.io/uniflow-ai/)  
 **Built by:** Divyesh Balaji
 
 ---
